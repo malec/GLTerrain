@@ -25,11 +25,15 @@ int ypos = 0;
 int zpos = 0;
 int mode = ROTATE;
 
-// Surface variables
+// Surface Variables
 #define SIZE 32
+
+// Coordinates
 float Px[SIZE + 1][SIZE + 1];
 float Py[SIZE + 1][SIZE + 1];
 float Pz[SIZE + 1][SIZE + 1];
+
+// Surface Normals
 float Nx[SIZE + 1][SIZE + 1];
 float Ny[SIZE + 1][SIZE + 1];
 float Nz[SIZE + 1][SIZE + 1];
@@ -38,28 +42,84 @@ float Nz[SIZE + 1][SIZE + 1];
 #include "shading.cpp"
 
 //---------------------------------------
-// Initialize surface 
+// Calculate random value between [-R..R]
 //---------------------------------------
-void init_surface(float Xmin, float Xmax, float Ymin, float Ymax,
-	float Wxx, float Wxy, float Wyy, float Wx, float Wy, float W1)
+float myrand(float R)
 {
-	// Initialize surface
-	int i, j;
-	for (i = 0; i <= SIZE; i++)
-		for (j = 0; j <= SIZE; j++)
-		{
-			// Calculate point
-			Px[i][j] = Xmin + i * (Xmax - Xmin) / SIZE;
-			Py[i][j] = Ymin + j * (Ymax - Ymin) / SIZE;
-			Pz[i][j] = Wxx * Px[i][j] * Px[i][j]
-				+ Wxy * Px[i][j] * Py[i][j]
-				+ Wyy * Py[i][j] * Py[i][j]
-				+ Wx * Px[i][j]
-				+ Wy * Py[i][j] + W1;
+	return (2 * R * rand()) / RAND_MAX - R;
+}
 
-			// Calculate unit length normal
-			Nx[i][j] = -(2 * Wxx * Px[i][j] + Wxy * Py[i][j] + Wx);
-			Ny[i][j] = -(2 * Wyy * Py[i][j] + Wxy * Px[i][j] + Wy);
+//---------------------------------------
+// Recursive function to split surface
+//---------------------------------------
+void split(int xlow, int xhigh, int ylow, int yhigh, float radius)
+{
+	// Check terminating condition
+	if ((xhigh > xlow + 1) || (yhigh > ylow + 1))
+	{
+		// Calculate length of diagonal
+		int xmid = (xhigh + xlow) / 2;
+		int ymid = (yhigh + ylow) / 2;
+		float dx = Px[xhigh][yhigh] - Px[xlow][ylow];
+		float dy = Py[xhigh][yhigh] - Py[xlow][ylow];
+		float dz = Pz[xhigh][yhigh] - Pz[xlow][ylow];
+		float length = sqrt(dx * dx + dy * dy + dz * dz) / radius;
+		
+
+		// Generate five midpoints with random displacements
+		Px[xlow][ymid] = (Px[xlow][ylow] + Px[xlow][yhigh]) / 2 + myrand(length);
+		Py[xlow][ymid] = (Py[xlow][ylow] + Py[xlow][yhigh]) / 2 + myrand(length);
+		Pz[xlow][ymid] = (Pz[xlow][ylow] + Pz[xlow][yhigh]) / 2 + myrand(length);
+
+		Px[xhigh][ymid] = (Px[xhigh][ylow] + Px[xhigh][yhigh]) / 2 + myrand(length);
+		Py[xhigh][ymid] = (Py[xhigh][ylow] + Py[xhigh][yhigh]) / 2 + myrand(length);
+		Pz[xhigh][ymid] = (Pz[xhigh][ylow] + Pz[xhigh][yhigh]) / 2 + myrand(length);
+
+		Px[xmid][ylow] = (Px[xlow][ylow] + Px[xhigh][ylow]) / 2 + myrand(length);
+		Py[xmid][ylow] = (Py[xlow][ylow] + Py[xhigh][ylow]) / 2 + myrand(length);
+		Pz[xmid][ylow] = (Pz[xlow][ylow] + Pz[xhigh][ylow]) / 2 + myrand(length);
+
+		Px[xmid][yhigh] = (Px[xlow][yhigh] + Px[xhigh][yhigh]) / 2 + myrand(length);
+		Py[xmid][yhigh] = (Py[xlow][yhigh] + Py[xhigh][yhigh]) / 2 + myrand(length);
+		Pz[xmid][yhigh] = (Pz[xlow][yhigh] + Pz[xhigh][yhigh]) / 2 + myrand(length);
+
+		Px[xmid][ymid] = (Px[xlow][ylow] + Px[xhigh][yhigh]) / 2 + myrand(length);
+		Py[xmid][ymid] = (Py[xlow][ylow] + Py[xhigh][yhigh]) / 2 + myrand(length);
+		Pz[xmid][ymid] = (Pz[xlow][ylow] + Pz[xhigh][yhigh]) / 2 + myrand(length);
+
+		// Perform recursive calls
+		split(xlow, xmid, ylow, ymid, radius);
+		split(xmid, xhigh, ylow, ymid, radius);
+		split(xlow, xmid, ymid, yhigh, radius);
+		split(xmid, xhigh, ymid, yhigh, radius);
+	}
+}
+
+//---------------------------------------
+// Initialize random surface 
+//---------------------------------------
+void init_surface()
+{
+	// Initialize surface points
+	Px[0][0] = -0.5;
+	Py[0][0] = -0.5;
+	Pz[0][0] = 0.0;
+	Px[0][SIZE] = -0.5;
+	Py[0][SIZE] = 0.5;
+	Pz[0][SIZE] = 0.0;
+	Px[SIZE][0] = 0.5;
+	Py[SIZE][0] = -0.5;
+	Pz[SIZE][0] = 0.0;
+	Px[SIZE][SIZE] = 0.5;
+	Py[SIZE][SIZE] = 0.5;
+	Pz[SIZE][SIZE] = 0.0;
+	split(0, SIZE, 0, SIZE, 20);
+
+	// Calculate unit length normal
+	for (int i = 0; i < SIZE; i++) {
+		for (int j = 0; j < SIZE; j++) {
+			Nx[i][j] = -(2 * -1 * Px[i][j] + 0 * Py[i][j] + myrand(.5));
+			Ny[i][j] = -(2 * Py[i][j] + 0 * Px[i][j] + myrand(.15));
 			Nz[i][j] = 1;
 			float length = sqrt(Nx[i][j] * Nx[i][j]
 				+ Ny[i][j] * Ny[i][j]
@@ -71,6 +131,7 @@ void init_surface(float Xmin, float Xmax, float Ymin, float Ymax,
 				Nz[i][j] /= length;
 			}
 		}
+	}
 }
 
 //---------------------------------------
@@ -82,16 +143,20 @@ void init()
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	float radius = 2;
+	float radius = 1;
 	glOrtho(-radius, radius, -radius, radius, -radius, radius);
 	glEnable(GL_DEPTH_TEST);
 
 	// Initialize smooth shading
-	glShadeModel(GL_SMOOTH);
-	init_light(GL_LIGHT0, 1, 1, 1, 1, 1, 1);
+	// glShadeModel(GL_SMOOTH);
+	glEnable(GL_NORMALIZE);
+	init_light(GL_LIGHT0, 0, 1, 1, 0.5, 0.5, 0.5);
+	// init_light(GL_LIGHT0, 1, 1, 1, 1, 1, 1);
+	init_light(GL_LIGHT1, 0, 0, 1, 0.5, 0.5, 0.5);
+	init_light(GL_LIGHT2, 0, 1, 0, 0.5, 0.5, 0.5);
 
 	// Initialize surface
-	init_surface(-1.0, 1.0, -1.0, 1.0, -1, 0, -1, 0, 0, 0);
+	init_surface();
 }
 
 //---------------------------------------
@@ -113,16 +178,20 @@ void display()
 
 	// Draw the surface
 	int i, j;
+	glColor3f(1, 0, 0);
 	for (i = 0; i < SIZE; i++)
 		for (j = 0; j < SIZE; j++)
 		{
 			glBegin(GL_POLYGON);
 			glNormal3f(Nx[i][j], Ny[i][j], Nz[i][j]);
 			glVertex3f(Px[i][j], Py[i][j], Pz[i][j]);
+			
 			glNormal3f(Nx[i + 1][j], Ny[i + 1][j], Nz[i + 1][j]);
 			glVertex3f(Px[i + 1][j], Py[i + 1][j], Pz[i + 1][j]);
+			
 			glNormal3f(Nx[i + 1][j + 1], Ny[i + 1][j + 1], Nz[i + 1][j + 1]);
 			glVertex3f(Px[i + 1][j + 1], Py[i + 1][j + 1], Pz[i + 1][j + 1]);
+			
 			glNormal3f(Nx[i][j + 1], Ny[i][j + 1], Nz[i][j + 1]);
 			glVertex3f(Px[i][j + 1], Py[i][j + 1], Pz[i][j + 1]);
 			glEnd();
@@ -181,7 +250,8 @@ void keyboard(unsigned char key, int x, int y)
 		else if (key == 'Z')
 			zpos += 10;
 	}
-
+	if (key == 'i')
+		init_surface();
 	// Handle material properties
 	if (key == 'a')
 		Ka -= STEP;
@@ -226,8 +296,8 @@ void mouse(int button, int state, int x, int y)
 	// Handle ROTATE
 	if ((mode == ROTATE) && (state == GLUT_UP))
 	{
-		xangle += (y - ydown);
-		yangle -= (x - xdown);
+		xangle += (y - ydown) / 4;
+		yangle -= (x - xdown) / 4;
 		zangle = 0;
 		glutPostRedisplay();
 	}
@@ -235,8 +305,8 @@ void mouse(int button, int state, int x, int y)
 	// Handle TRANSLATE
 	if ((mode == TRANSLATE) && (state == GLUT_UP))
 	{
-		xpos += (x - xdown);
-		ypos -= (y - ydown);
+		xpos += (x - xdown) / 4;
+		ypos -= (y - ydown) / 4;
 		glutPostRedisplay();
 	}
 }
@@ -250,13 +320,6 @@ void mouse(int button, int state, int x, int y)
 //---------------------------------------
 // Initialize light source
 //---------------------------------------
-
-// Put following inside init() function
-// glShadeModel(GL_SMOOTH);
-// glEnable(GL_NORMALIZE);
-// init_light(GL_LIGHT0, 0, 1, 1, 0.5, 0.5, 0.5);
-// init_light(GL_LIGHT1, 0, 0, 1, 0.5, 0.5, 0.5);
-// init_light(GL_LIGHT2, 0, 1, 0, 0.5, 0.5, 0.5);
 
 // Put following inside display() function
 // init_material(Ka, Kd, Ks, 100 * Kp, 0.8, 0.6, 0.4);
