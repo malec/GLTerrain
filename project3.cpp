@@ -340,6 +340,7 @@ void keyboard(unsigned char key, int x, int y)
 				gvalb += .1;
 			else if (key == 'B')
 				bvalb += .1;
+			cout << "RGB: " << rvalb << " " << gvalb << " " << bvalb << endl;
 			if (key == 'x')
 				xposb -= 1;
 			else if (key == 'y')
@@ -486,7 +487,12 @@ int main(int argc, char *argv[])
 	glutCreateWindow("Surface");
 	init();
 	printf("Type r to enter ROTATE mode or t to enter TRANSLATE mode.\n");
-
+	printf("Type c to enter CAMERA mode, again to go back to rotate mode.\n");
+	printf("\tPress 1 or 2 to select/activate camera 1 or 2.\n");
+	printf("\tPress x | y | z to decrease x, y, z active camera position(s).\n");
+	printf("\tPress X | Y | Z to increase x, y, z active camera position(s).\n");
+	printf("\tPress r | g | b to decrease r, g, b vertex color(s).\n");
+	printf("\tPress R | G | B to increase R, G, B vertex color(s).\n");
 	// Specify callback function
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
