@@ -65,8 +65,6 @@ float G[SIZE + 1][SIZE + 1];
 float B[SIZE + 1][SIZE + 1];
 #define STEP 0.1
 
-#include "shading.cpp"
-
 //---------------------------------------
 // Calculate random value between [-R..R]
 //---------------------------------------
