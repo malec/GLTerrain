@@ -1,9 +1,9 @@
 //---------------------------------------
-// Program: surface3.cpp
-// Purpose: Use Phong shading to display
-//          quadratic surface model.
-// Author:  John Gauch
-// Date:    October 2008
+// Program: project3.cpp
+// Purpose: Use gouraud shading to display
+//          terrain surface.
+// Author:  Alexander Ahlbrandt
+// Date:    March 2019
 //---------------------------------------
 #include <math.h>
 #include <stdio.h>
@@ -11,7 +11,6 @@
 #include <string>
 #include <iostream>
 #include <vector>
-using namespace std;
 #ifdef MAC
 #include <GLUT/glut.h>
 #else
@@ -213,7 +212,7 @@ void display()
 			int b = 0;
 			int c = 1;
 			// "find the vector V from the vertex point to the light source"
-			vector<float> vA = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
+			std::vector<float> vA = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
 			// "calculate the dot product of V with the surface normal N"
 			float dotProductA = vA[0] * Nx[i][j] + vA[1] * Ny[i][j] + vA[2] * Nz[i][j];
 			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
@@ -221,7 +220,7 @@ void display()
 			dotProductA *= 1 / (a + b * DA + pow(c*DA, 2));
 			
 			// "find the vector V from the vertex point to the light source"
-			vector<float> vB = { xposb - Px[i][j], yposb - Py[i][j], zposb - Pz[i][j] };
+			std::vector<float> vB = { xposb - Px[i][j], yposb - Py[i][j], zposb - Pz[i][j] };
 			// "calculate the dot product of V with the surface normal N"
 			float dotProductB = vB[0] * Nx[i][j] + vB[1] * Ny[i][j] + vB[2] * Nz[i][j];
 			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
@@ -264,7 +263,7 @@ void display()
 bool lightModeA = true;
 bool lightModeB = true;
 int lastMode;
-string onOrOff(bool on) {
+std::string onOrOff(bool on) {
 	return on ? "on" : "off";
 }
 //---------------------------------------
@@ -275,23 +274,23 @@ void keyboard(unsigned char key, int x, int y)
 	// Determine if we are in ROTATE or TRANSLATE mode
 	if ((tolower(key) == 'r') && mode != COLOR)
 	{
-		cout << "Rotate mode" << endl;
+		std::cout << "Rotate mode" << std::endl;
 		// printf("Type x y z to decrease or X Y Z to increase ROTATION angles.\n");
 		mode = ROTATE;
 	}
 	else if (tolower(key) == 't' && mode != COLOR)
 	{
-		cout << "Translate mode" << endl;
+		std::cout << "Translate mode" << std::endl;
 		// printf("Type x y z to decrease or X Y Z to increase TRANSLATION distance.\n");
 		mode = TRANSLATE;
 	}
 	else if (tolower(key) == 'c') {
 		mode = (mode == COLOR) ? ROTATE : COLOR;
 		if (mode == ROTATE) {
-			cout << "Back to rotate mode" << endl;
+			std::cout << "Back to rotate mode" << std::endl;
 		}
 		else {
-			cout << "Color mode " << onOrOff(mode == COLOR) << endl;
+			std::cout << "Color mode " << onOrOff(mode == COLOR) << std::endl;
 		}
 	}
 
@@ -310,7 +309,7 @@ void keyboard(unsigned char key, int x, int y)
 				gvala += .1;
 			else if (key == 'B')
 				bvala += .1;
-			cout << "RGB: " << rvala << " " << gvala << " " << bvala << endl;
+			std::cout << "RGB: " << rvala << " " << gvala << " " << bvala << std::endl;
 			if (key == 'x')
 				xposa -= 1;
 			else if (key == 'y')
@@ -323,7 +322,7 @@ void keyboard(unsigned char key, int x, int y)
 				yposa += 1;
 			else if (key == 'Z')
 				zposa += 1;
-			cout << "camera 1 Position x,y,z: " << xposa << ", " << yposa << ", " << zposa << endl;
+			std::cout << "camera 1 Position x,y,z: " << xposa << ", " << yposa << ", " << zposa << std::endl;
 		}
 
 		// Handle light 2
@@ -340,7 +339,7 @@ void keyboard(unsigned char key, int x, int y)
 				gvalb += .1;
 			else if (key == 'B')
 				bvalb += .1;
-			cout << "RGB: " << rvalb << " " << gvalb << " " << bvalb << endl;
+			std::cout << "RGB: " << rvalb << " " << gvalb << " " << bvalb << std::endl;
 			if (key == 'x')
 				xposb -= 1;
 			else if (key == 'y')
@@ -353,7 +352,7 @@ void keyboard(unsigned char key, int x, int y)
 				yposb += 1;
 			else if (key == 'Z')
 				zposb += 1;
-			cout << "camera 2 Position x,y,z: " << xposb << ", " << yposb << ", " << zposb << endl;
+			std::cout << "camera 2 Position x,y,z: " << xposb << ", " << yposb << ", " << zposb << std::endl;
 		}
 	}
 	else {
@@ -393,38 +392,13 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	if (key == 'i')
 		init_surface();
-	// Handle material properties
-	if (key == 'a')
-		Ka -= STEP;
-	if (key == 'd')
-		Kd -= STEP;
-	if (key == 's')
-		Ks -= STEP;
-	if (key == 'p')
-		Kp -= STEP;
-	if (key == 'A')
-		Ka += STEP;
-	if (key == 'D')
-		Kd += STEP;
-	if (key == 'S')
-		Ks += STEP;
-	if (key == 'P')
-		Kp += STEP;
-	if (Ka < 0)
-		Ka = 0;
-	if (Kd < 0)
-		Kd = 0;
-	if (Ks < 0)
-		Ks = 0;
-	if (Kp < STEP)
-		Kp = STEP;
 	if (key == '1') {
 		lightModeA = !lightModeA;
-		cout << "light mode A " << onOrOff(lightModeA) << endl;
+		std::cout << "light mode A " << onOrOff(lightModeA) << std::endl;
 	}
 	if (key == '2') {
 		lightModeB = !lightModeB;
-		cout << "light mode B " << onOrOff(lightModeB) << endl;
+		std::cout << "light mode B " << onOrOff(lightModeB) << std::endl;
 	}
 	glutPostRedisplay();
 }
@@ -459,20 +433,6 @@ void mouse(int button, int state, int x, int y)
 		glutPostRedisplay();
 	}
 }
-
-// Material properties
-//float Ka = 0.2;
-//float Kd = 0.4;
-//float Ks = 0.4;
-//float Kp = 0.5;
-
-//---------------------------------------
-// Initialize light source
-//---------------------------------------
-
-// Put following inside display() function
-// init_material(Ka, Kd, Ks, 100 * Kp, 0.8, 0.6, 0.4);
-
 
 //---------------------------------------
 // Main program
