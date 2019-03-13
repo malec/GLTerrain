@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string>
 #include <iostream>
+#include <vector>
 using namespace std;
 #ifdef MAC
 #include <GLUT/glut.h>
@@ -45,7 +46,7 @@ float bvalb = 1;
 int mode = ROTATE;
 
 // Surface Variables
-#define SIZE 32
+#define SIZE 31
 
 // Coordinates
 float Px[SIZE + 1][SIZE + 1];
@@ -56,6 +57,11 @@ float Pz[SIZE + 1][SIZE + 1];
 float Nx[SIZE + 1][SIZE + 1];
 float Ny[SIZE + 1][SIZE + 1];
 float Nz[SIZE + 1][SIZE + 1];
+
+// Colors
+float R[SIZE + 1][SIZE + 1];
+float G[SIZE + 1][SIZE + 1];
+float B[SIZE + 1][SIZE + 1];
 #define STEP 0.1
 
 #include "shading.cpp"
@@ -83,7 +89,7 @@ void split(int xlow, int xhigh, int ylow, int yhigh, float radius)
 		float dy = Py[xhigh][yhigh] - Py[xlow][ylow];
 		float dz = Pz[xhigh][yhigh] - Pz[xlow][ylow];
 		float length = sqrt(dx * dx + dy * dy + dz * dz) / radius;
-		
+
 
 		// Generate five midpoints with random displacements
 		Px[xlow][ymid] = (Px[xlow][ylow] + Px[xlow][yhigh]) / 2 + myrand(length);
@@ -134,15 +140,26 @@ void init_surface()
 	Pz[SIZE][SIZE] = 0.0;
 	split(0, SIZE, 0, SIZE, 20);
 
-	// Calculate unit length normal
-	for (int i = 0; i < SIZE; i++) {
-		for (int j = 0; j < SIZE; j++) {
-			Nx[i][j] = -(2 * -1 * Px[i][j] + 0 * Py[i][j] + myrand(.5));
-			Ny[i][j] = -(2 * Py[i][j] + 0 * Px[i][j] + myrand(.15));
-			Nz[i][j] = 1;
-			float length = sqrt(Nx[i][j] * Nx[i][j]
-				+ Ny[i][j] * Ny[i][j]
-				+ Nz[i][j] * Nz[i][j]);
+	// Define surface normals
+	for (int i = 0; i < SIZE; i++)
+		for (int j = 0; j < SIZE; j++)
+		{
+			// Get two tangent vectors
+			float Ix = Px[i + 1][j] - Px[i][j];
+			float Iy = Py[i + 1][j] - Py[i][j];
+			float Iz = Pz[i + 1][j] - Pz[i][j];
+			float Jx = Px[i][j + 1] - Px[i][j];
+			float Jy = Py[i][j + 1] - Py[i][j];
+			float Jz = Pz[i][j + 1] - Pz[i][j];
+
+			// Do cross product
+			Nx[i][j] = Iy * Jz - Iz * Jy;
+			Ny[i][j] = Iz * Jx - Ix * Jz;
+			Nz[i][j] = Ix * Jy - Iy * Jx;
+			float length = sqrt(
+				Nx[i][j] * Nx[i][j] +
+				Ny[i][j] * Ny[i][j] +
+				Nz[i][j] * Nz[i][j]);
 			if (length > 0)
 			{
 				Nx[i][j] /= length;
@@ -150,7 +167,6 @@ void init_surface()
 				Nz[i][j] /= length;
 			}
 		}
-	}
 }
 
 //---------------------------------------
@@ -167,10 +183,6 @@ void init()
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_NORMALIZE);
-	//init_light(GL_LIGHT0, 0, 1, 1, 0.5, 0.5, 0.5);
-	//init_light(GL_LIGHT0, 1, 1, 1, 1, 1, 1);
-	//init_light(GL_LIGHT1, 0, 0, 1, 0.5, 0.5, 0.5);
-	//init_light(GL_LIGHT2, 0, 1, 0, 0.5, 0.5, 0.5);
 
 	// Initialize surface
 	init_surface();
@@ -189,26 +201,50 @@ void display()
 	glRotatef(xangle, 1.0, 0.0, 0.0);
 	glRotatef(yangle, 0.0, 1.0, 0.0);
 	glRotatef(zangle, 0.0, 0.0, 1.0);
-	
-	init_light(GL_LIGHT0, xposa, yposa, zposa, rvala, gvala, bvala);
-	init_light(GL_LIGHT1, xposb, yposb, zposb, rvalb, gvalb, bvalb);
+
+	// You need to take this out - used for phong shading
+	// init_light(GL_LIGHT0, xposa, yposa, zposa, rvala, gvala, bvala);
+	// init_light(GL_LIGHT1, xposb, yposb, zposb, rvalb, gvalb, bvalb);
+
+	//Calculate the vertex colors
+	for (int i = 0; i < SIZE; i++)
+		for (int j = 0; j < SIZE; j++) {
+			int a = 0;
+			int b = 0;
+			int c = 1;
+			// "find the vector V from the vertex point to the light source"
+			vector<float> v = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
+			// "calculate the dot product of V with the surface normal N"
+			float dotProduct = v[0] * Nx[i][j] + v[1] * Ny[i][j] + v[2] * Nz[i][j];
+			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
+			float D = sqrt(pow(a - v[0], 2) + pow(b - v[1], 2) + pow(c - v[2], 2));
+			dotProduct *= 1 / (a + b * D + pow(c*D, 2));
+			R[i][j] = dotProduct * rvala;
+			G[i][j] = dotProduct * gvala;
+			B[i][j] = dotProduct * bvala;
+		}
 
 	// Draw the surface
 	int i, j;
-	glColor3f(1, 0, 0);
 	for (i = 0; i < SIZE; i++)
 		for (j = 0; j < SIZE; j++)
 		{
 			glBegin(GL_POLYGON);
+
+			// Get the color of the point
+			glColor3f(R[i][j], G[i][j], B[i][j]);
 			glNormal3f(Nx[i][j], Ny[i][j], Nz[i][j]);
 			glVertex3f(Px[i][j], Py[i][j], Pz[i][j]);
-			
+
+			glColor3f(R[i+1][j], G[i+1][j], B[i+1][j]);
 			glNormal3f(Nx[i + 1][j], Ny[i + 1][j], Nz[i + 1][j]);
 			glVertex3f(Px[i + 1][j], Py[i + 1][j], Pz[i + 1][j]);
-			
+
+			glColor3f(R[i+1][j+1], G[i+1][j+1], B[i + 1][j + 1]);
 			glNormal3f(Nx[i + 1][j + 1], Ny[i + 1][j + 1], Nz[i + 1][j + 1]);
 			glVertex3f(Px[i + 1][j + 1], Py[i + 1][j + 1], Pz[i + 1][j + 1]);
-			
+
+			glColor3f(R[i][j + 1], G[i][j + 1], B[i][j + 1]);
 			glNormal3f(Nx[i][j + 1], Ny[i][j + 1], Nz[i][j + 1]);
 			glVertex3f(Px[i][j + 1], Py[i][j + 1], Pz[i][j + 1]);
 			glEnd();
@@ -216,8 +252,8 @@ void display()
 	glFlush();
 }
 
-bool lightModeA = false;
-bool lightModeB = false;
+bool lightModeA = true;
+bool lightModeB = true;
 int lastMode;
 string onOrOff(bool on) {
 	return on ? "on" : "off";
@@ -265,6 +301,7 @@ void keyboard(unsigned char key, int x, int y)
 				gvala += .1;
 			else if (key == 'B')
 				bvala += .1;
+			cout << "RGB: " << rvala << " " << gvala << " " << bvala << endl;
 			if (key == 'x')
 				xposa -= 1;
 			else if (key == 'y')
@@ -376,7 +413,7 @@ void keyboard(unsigned char key, int x, int y)
 		cout << "light mode A " << onOrOff(lightModeA) << endl;
 	}
 	if (key == '2') {
-		lightModeB = !lightModeB; 
+		lightModeB = !lightModeB;
 		cout << "light mode B " << onOrOff(lightModeB) << endl;
 	}
 	glutPostRedisplay();
