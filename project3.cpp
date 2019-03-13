@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <string>
 #include <iostream>
-#include <vector>
 #ifdef MAC
 #include <GLUT/glut.h>
 #else
@@ -212,7 +211,7 @@ void display()
 			int b = 0;
 			int c = 1;
 			// "find the vector V from the vertex point to the light source"
-			std::vector<float> vA = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
+			float vA[] = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
 			// "calculate the dot product of V with the surface normal N"
 			float dotProductA = vA[0] * Nx[i][j] + vA[1] * Ny[i][j] + vA[2] * Nz[i][j];
 			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
@@ -220,7 +219,7 @@ void display()
 			dotProductA *= 1 / (a + b * DA + pow(c*DA, 2));
 			
 			// "find the vector V from the vertex point to the light source"
-			std::vector<float> vB = { xposb - Px[i][j], yposb - Py[i][j], zposb - Pz[i][j] };
+			float vB[] = { xposb - Px[i][j], yposb - Py[i][j], zposb - Pz[i][j] };
 			// "calculate the dot product of V with the surface normal N"
 			float dotProductB = vB[0] * Nx[i][j] + vB[1] * Ny[i][j] + vB[2] * Nz[i][j];
 			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
