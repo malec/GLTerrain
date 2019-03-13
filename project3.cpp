@@ -30,14 +30,16 @@ int zpos = 0;
 
 int xposa = 0;
 int yposa = 0;
-int zposa = 0;
+const int initialCamAZPos = 5;
+int initialCamAZPos = 5;
 float rvala = 1;
 float gvala = 1;
 float bvala = 1;
 
 int xposb = 0;
 int yposb = 0;
-int zposb = 0;
+const int initialCamBZPos = 5;
+int zposb = initialCamBZPos;
 float rvalb = 1;
 float gvalb = 1;
 float bvalb = 1;
