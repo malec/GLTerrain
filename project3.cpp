@@ -8,6 +8,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <iostream>
+using namespace std;
 #ifdef MAC
 #include <GLUT/glut.h>
 #else
@@ -17,12 +20,28 @@
 // Transformation variables 
 #define ROTATE 1
 #define TRANSLATE 2
+#define COLOR 3
 int xangle = 0;
 int yangle = 0;
 int zangle = 0;
 int xpos = 0;
 int ypos = 0;
 int zpos = 0;
+
+int xposa = 0;
+int yposa = 0;
+int zposa = 0;
+float rvala = 1;
+float gvala = 1;
+float bvala = 1;
+
+int xposb = 0;
+int yposb = 0;
+int zposb = 0;
+float rvalb = 1;
+float gvalb = 1;
+float bvalb = 1;
+
 int mode = ROTATE;
 
 // Surface Variables
@@ -150,10 +169,10 @@ void init()
 	// Initialize smooth shading
 	// glShadeModel(GL_SMOOTH);
 	glEnable(GL_NORMALIZE);
-	init_light(GL_LIGHT0, 0, 1, 1, 0.5, 0.5, 0.5);
-	// init_light(GL_LIGHT0, 1, 1, 1, 1, 1, 1);
-	init_light(GL_LIGHT1, 0, 0, 1, 0.5, 0.5, 0.5);
-	init_light(GL_LIGHT2, 0, 1, 0, 0.5, 0.5, 0.5);
+	//init_light(GL_LIGHT0, 0, 1, 1, 0.5, 0.5, 0.5);
+	//init_light(GL_LIGHT0, 1, 1, 1, 1, 1, 1);
+	//init_light(GL_LIGHT1, 0, 0, 1, 0.5, 0.5, 0.5);
+	//init_light(GL_LIGHT2, 0, 1, 0, 0.5, 0.5, 0.5);
 
 	// Initialize surface
 	init_surface();
@@ -172,9 +191,12 @@ void display()
 	glRotatef(xangle, 1.0, 0.0, 0.0);
 	glRotatef(yangle, 0.0, 1.0, 0.0);
 	glRotatef(zangle, 0.0, 0.0, 1.0);
-
+	
+	init_light(GL_LIGHT0, xposa, yposa, zposa, rvala, gvala, bvala);
+	init_light(GL_LIGHT1, xposb, yposb, zposb, rvalb, gvalb, bvalb);
+	
 	// Initialize material properties
-	init_material(Ka, Kd, Ks, 100 * Kp, 0.6, 0.4, 0.8);
+	init_material(Ka, Kd, Ks, 100 * Kp, 0.2, 0.4, 0.8);
 
 	// Draw the surface
 	int i, j;
@@ -199,56 +221,133 @@ void display()
 	glFlush();
 }
 
+bool lightModeA = false;
+bool lightModeB = false;
+int lastMode;
+string onOrOff(bool on) {
+	return on ? "on" : "off";
+}
 //---------------------------------------
 // Keyboard callback for OpenGL
 //---------------------------------------
 void keyboard(unsigned char key, int x, int y)
 {
 	// Determine if we are in ROTATE or TRANSLATE mode
-	if ((key == 'r') || (key == 'R'))
+	if ((tolower(key) == 'r') && mode != COLOR)
 	{
-		printf("Type x y z to decrease or X Y Z to increase ROTATION angles.\n");
+		cout << "Rotate mode" << endl;
+		// printf("Type x y z to decrease or X Y Z to increase ROTATION angles.\n");
 		mode = ROTATE;
 	}
-	else if ((key == 't') || (key == 'T'))
+	else if (tolower(key) == 't' && mode != COLOR)
 	{
-		printf
-		("Type x y z to decrease or X Y Z to increase TRANSLATION distance.\n");
+		cout << "Translate mode" << endl;
+		// printf("Type x y z to decrease or X Y Z to increase TRANSLATION distance.\n");
 		mode = TRANSLATE;
 	}
-
-	// Handle ROTATE
-	if (mode == ROTATE)
-	{
-		if (key == 'x')
-			xangle -= 5;
-		else if (key == 'y')
-			yangle -= 5;
-		else if (key == 'z')
-			zangle -= 5;
-		else if (key == 'X')
-			xangle += 5;
-		else if (key == 'Y')
-			yangle += 5;
-		else if (key == 'Z')
-			zangle += 5;
+	else if (tolower(key) == 'c') {
+		mode = (mode == COLOR) ? ROTATE : COLOR;
+		if (mode == ROTATE) {
+			cout << "Back to rotate mode" << endl;
+		}
+		else {
+			cout << "Color mode " << onOrOff(mode == COLOR) << endl;
+		}
 	}
 
-	// Handle TRANSLATE
-	if (mode == TRANSLATE)
-	{
-		if (key == 'x')
-			xpos -= 10;
-		else if (key == 'y')
-			ypos -= 10;
-		else if (key == 'z')
-			zpos -= 10;
-		else if (key == 'X')
-			xpos += 10;
-		else if (key == 'Y')
-			ypos += 10;
-		else if (key == 'Z')
-			zpos += 10;
+	if (mode == COLOR) {
+		// Handle light 1
+		if (lightModeA) {
+			if (key == 'r')
+				rvala -= .1;
+			else if (key == 'g')
+				gvala -= .1;
+			else if (key == 'b')
+				bvala -= .1;
+			else if (key == 'R')
+				rvala += .1;
+			else if (key == 'G')
+				gvala += .1;
+			else if (key == 'B')
+				bvala += .1;
+			if (key == 'x')
+				xposa -= 1;
+			else if (key == 'y')
+				yposa -= 1;
+			else if (key == 'z')
+				zposa -= 1;
+			else if (key == 'X')
+				xposa += 1;
+			else if (key == 'Y')
+				yposa += 1;
+			else if (key == 'Z')
+				zposa += 1;
+			cout << "camera 1 Position x,y,z: " << xposa << ", " << yposa << ", " << zposa << endl;
+		}
+
+		// Handle light 2
+		if (lightModeB) {
+			if (key == 'r')
+				rvalb -= .1;
+			else if (key == 'g')
+				gvalb -= .1;
+			else if (key == 'b')
+				bvalb -= .1;
+			else if (key == 'R')
+				rvalb += .1;
+			else if (key == 'G')
+				gvalb += .1;
+			else if (key == 'B')
+				bvalb += .1;
+			if (key == 'x')
+				xposb -= 1;
+			else if (key == 'y')
+				yposb -= 1;
+			else if (key == 'z')
+				zposb -= 1;
+			else if (key == 'X')
+				xposb += 1;
+			else if (key == 'Y')
+				yposb += 1;
+			else if (key == 'Z')
+				zposb += 1;
+			cout << "camera 2 Position x,y,z: " << xposb << ", " << yposb << ", " << zposb << endl;
+		}
+	}
+	else {
+		// Handle ROTATE
+		if (mode == ROTATE)
+		{
+			if (key == 'x')
+				xangle -= 5;
+			else if (key == 'y')
+				yangle -= 5;
+			else if (key == 'z')
+				zangle -= 5;
+			else if (key == 'X')
+				xangle += 5;
+			else if (key == 'Y')
+				yangle += 5;
+			else if (key == 'Z')
+				zangle += 5;
+		}
+
+		// Handle TRANSLATE
+		if (mode == TRANSLATE)
+		{
+			if (key == 'x')
+				xpos -= 10;
+			else if (key == 'y')
+				ypos -= 10;
+			else if (key == 'z')
+				zpos -= 10;
+			else if (key == 'X')
+				xpos += 10;
+			else if (key == 'Y')
+				ypos += 10;
+			else if (key == 'Z')
+				zpos += 10;
+		}
 	}
 	if (key == 'i')
 		init_surface();
@@ -277,6 +376,14 @@ void keyboard(unsigned char key, int x, int y)
 		Ks = 0;
 	if (Kp < STEP)
 		Kp = STEP;
+	if (key == '1') {
+		lightModeA = !lightModeA;
+		cout << "light mode A " << onOrOff(lightModeA) << endl;
+	}
+	if (key == '2') {
+		lightModeB = !lightModeB; 
+		cout << "light mode B " << onOrOff(lightModeB) << endl;
+	}
 	glutPostRedisplay();
 }
 
