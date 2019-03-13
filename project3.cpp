@@ -166,8 +166,6 @@ void init()
 	glOrtho(-radius, radius, -radius, radius, -radius, radius);
 	glEnable(GL_DEPTH_TEST);
 
-	// Initialize smooth shading
-	// glShadeModel(GL_SMOOTH);
 	glEnable(GL_NORMALIZE);
 	//init_light(GL_LIGHT0, 0, 1, 1, 0.5, 0.5, 0.5);
 	//init_light(GL_LIGHT0, 1, 1, 1, 1, 1, 1);
@@ -194,9 +192,6 @@ void display()
 	
 	init_light(GL_LIGHT0, xposa, yposa, zposa, rvala, gvala, bvala);
 	init_light(GL_LIGHT1, xposb, yposb, zposb, rvalb, gvalb, bvalb);
-	
-	// Initialize material properties
-	init_material(Ka, Kd, Ks, 100 * Kp, 0.2, 0.4, 0.8);
 
 	// Draw the surface
 	int i, j;
