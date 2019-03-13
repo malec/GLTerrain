@@ -213,15 +213,24 @@ void display()
 			int b = 0;
 			int c = 1;
 			// "find the vector V from the vertex point to the light source"
-			vector<float> v = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
+			vector<float> vA = { xposa - Px[i][j], yposa - Py[i][j], zposa - Pz[i][j]};
 			// "calculate the dot product of V with the surface normal N"
-			float dotProduct = v[0] * Nx[i][j] + v[1] * Ny[i][j] + v[2] * Nz[i][j];
+			float dotProductA = vA[0] * Nx[i][j] + vA[1] * Ny[i][j] + vA[2] * Nz[i][j];
 			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
-			float D = sqrt(pow(a - v[0], 2) + pow(b - v[1], 2) + pow(c - v[2], 2));
-			dotProduct *= 1 / (a + b * D + pow(c*D, 2));
-			R[i][j] = dotProduct * rvala;
-			G[i][j] = dotProduct * gvala;
-			B[i][j] = dotProduct * bvala;
+			float DA = sqrt(pow(a - vA[0], 2) + pow(b - vA[1], 2) + pow(c - vA[2], 2));
+			dotProductA *= 1 / (a + b * DA + pow(c*DA, 2));
+			
+			// "find the vector V from the vertex point to the light source"
+			vector<float> vB = { xposb - Px[i][j], yposb - Py[i][j], zposb - Pz[i][j] };
+			// "calculate the dot product of V with the surface normal N"
+			float dotProductB = vB[0] * Nx[i][j] + vB[1] * Ny[i][j] + vB[2] * Nz[i][j];
+			// then multiply by 1/(a+bD+cD2) where D is the Euclidean distance from the vertex point abc
+			float DB = sqrt(pow(a - vB[0], 2) + pow(b - vB[1], 2) + pow(c - vB[2], 2));
+			dotProductB *= 1 / (a + b * DB + pow(c*DB, 2));
+
+			R[i][j] = dotProductA * rvala + rvalb * dotProductB;
+			G[i][j] = dotProductA * gvala + gvalb * dotProductB;
+			B[i][j] = dotProductA * bvala + bvalb * dotProductB;
 		}
 
 	// Draw the surface
