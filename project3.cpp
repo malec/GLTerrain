@@ -1,6 +1,6 @@
 //---------------------------------------
 // Program: project3.cpp
-// Purpose: Use gouraud shading to display
+// Purpose: Use Gouraud shading to display
 //          terrain surface.
 // Author:  Alexander Ahlbrandt
 // Date:    March 2019
